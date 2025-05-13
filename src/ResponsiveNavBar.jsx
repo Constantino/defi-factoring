@@ -12,13 +12,16 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
+import { useWallet } from './context/WalletContext';
 import logo from './assets/defi-factoring-logo.png';
+
 const pages = ['Issuer', 'Viewer', 'Marketplace', 'Payment'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
+    const { account, isConnecting, connectWallet, disconnectWallet } = useWallet();
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -33,6 +36,10 @@ function ResponsiveAppBar() {
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
+    };
+
+    const formatAddress = (address) => {
+        return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
 
     return (
@@ -113,6 +120,42 @@ function ResponsiveAppBar() {
                                 {page}
                             </Button>
                         ))}
+                    </Box>
+                    <Box sx={{ flexGrow: 0 }}>
+                        {account ? (
+                            <Button
+                                onClick={disconnectWallet}
+                                sx={{
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                                    }
+                                }}
+                            >
+                                {formatAddress(account)}
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={connectWallet}
+                                disabled={isConnecting}
+                                sx={{
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                                    },
+                                    '&.Mui-disabled': {
+                                        color: 'rgba(255, 255, 255, 0.5)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    }
+                                }}
+                            >
+                                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                            </Button>
+                        )}
                     </Box>
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open settings">
