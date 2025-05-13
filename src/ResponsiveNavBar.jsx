@@ -36,10 +36,28 @@ function ResponsiveAppBar() {
     };
 
     return (
-        <AppBar position="static">
+        <AppBar
+            position="fixed"
+            sx={{
+                backgroundColor: 'rgba(10, 10, 10, 0.3) !important',
+                backdropFilter: 'blur(20px) !important',
+                WebkitBackdropFilter: 'blur(20px) !important',
+                boxShadow: 'none',
+                top: 0,
+                left: 0,
+                right: 0,
+                '& .MuiToolbar-root': {
+                    backgroundColor: 'transparent',
+                }
+            }}
+        >
             <Container maxWidth="xl">
-                <Toolbar disableGutters>
-                    <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+                <Toolbar disableGutters sx={{ backgroundColor: 'transparent' }}>
+                    <AdbIcon sx={{
+                        display: { xs: 'none', md: 'flex' },
+                        mr: 1,
+                        color: '#00ff00' // Adding green color to match the background glow
+                    }} />
                     <Typography
                         variant="h6"
                         noWrap
@@ -116,7 +134,14 @@ function ResponsiveAppBar() {
                             <Button
                                 key={page}
                                 onClick={handleCloseNavMenu}
-                                sx={{ my: 2, color: 'white', display: 'block' }}
+                                sx={{
+                                    my: 2,
+                                    color: 'white',
+                                    display: 'block',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                    }
+                                }}
                             >
                                 {page}
                             </Button>
