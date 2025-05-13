@@ -123,19 +123,21 @@ function ResponsiveAppBar() {
                     </Box>
                     <Box sx={{ flexGrow: 0 }}>
                         {account ? (
-                            <Button
-                                onClick={disconnectWallet}
-                                sx={{
-                                    color: 'white',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                                    }
-                                }}
-                            >
-                                {formatAddress(account)}
-                            </Button>
+                            <Tooltip title="Click to disconnect" placement="bottom">
+                                <Button
+                                    onClick={disconnectWallet}
+                                    sx={{
+                                        color: 'white',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                            border: '1px solid rgba(0, 255, 0, 0.3)',
+                                        }
+                                    }}
+                                >
+                                    {formatAddress(account)}
+                                </Button>
+                            </Tooltip>
                         ) : (
                             <Button
                                 onClick={connectWallet}
