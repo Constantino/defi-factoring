@@ -19,6 +19,13 @@ function Marketplace() {
     const [loading, setLoading] = useState(true);
     const { account } = useWallet();
 
+    const appendPinataToken = (url) => {
+        if (url && url.includes('mypinata.cloud')) {
+            return `${url}?pinataGatewayToken=${import.meta.env.VITE_PINATA_GATEWAY_TOKEN}`;
+        }
+        return url;
+    };
+
     useEffect(() => {
         const fetchListedNFTs = async () => {
             try {
@@ -52,7 +59,7 @@ function Marketplace() {
                             console.log(`Token ${i} URI:`, tokenURI);
 
                             // Append Pinata gateway token to the URI
-                            const metadataURI = `${tokenURI}?pinataGatewayToken=${import.meta.env.VITE_PINATA_GATEWAY_TOKEN}`;
+                            const metadataURI = appendPinataToken(tokenURI);
                             console.log(`Token ${i} metadata URI:`, metadataURI);
 
                             // Fetch metadata
@@ -60,9 +67,19 @@ function Marketplace() {
                             const metadata = await response.json();
                             console.log(`Token ${i} metadata:`, metadata);
 
+                            // Append Pinata token to image and PDF URLs
+                            const processedMetadata = {
+                                ...metadata,
+                                image: appendPinataToken(metadata.image),
+                                attributes: {
+                                    ...metadata.attributes,
+                                    pdfFile: appendPinataToken(metadata.attributes?.pdfFile)
+                                }
+                            };
+
                             listedNFTs.push({
                                 tokenId: i.toString(),
-                                ...metadata,
+                                ...processedMetadata,
                                 listing: {
                                     seller,
                                     price: price.toString(),
@@ -78,88 +95,8 @@ function Marketplace() {
                 }
 
                 console.log('All listed NFTs:', listedNFTs);
-
-                // Keep using mock data for now
-                const mockInvoices = [
-                    {
-                        tokenId: "1",
-                        name: "Invoice #001",
-                        description: "Web Development Services",
-                        image: "https://picsum.photos/400/300",
-                        attributes: {
-                            invoiceAmount: 5000,
-                            creditRequested: 4000,
-                            dueBy: "2024-06-30",
-                            pdfFile: "https://example.com/invoice1.pdf"
-                        }
-                    },
-                    {
-                        tokenId: "2",
-                        name: "Invoice #002",
-                        description: "UI/UX Design Project",
-                        image: "https://picsum.photos/400/301",
-                        attributes: {
-                            invoiceAmount: 7500,
-                            creditRequested: 6000,
-                            dueBy: "2024-07-15",
-                            pdfFile: "https://example.com/invoice2.pdf"
-                        }
-                    },
-                    {
-                        tokenId: "3",
-                        name: "Invoice #003",
-                        description: "Mobile App Development",
-                        image: "https://picsum.photos/400/302",
-                        attributes: {
-                            invoiceAmount: 12000,
-                            creditRequested: 10000,
-                            dueBy: "2024-08-01",
-                            pdfFile: "https://example.com/invoice3.pdf"
-                        }
-                    },
-                    {
-                        tokenId: "4",
-                        name: "Invoice #004",
-                        description: "Cloud Infrastructure Setup",
-                        image: "https://picsum.photos/400/303",
-                        attributes: {
-                            invoiceAmount: 8500,
-                            creditRequested: 7000,
-                            dueBy: "2024-07-30",
-                            pdfFile: "https://example.com/invoice4.pdf"
-                        }
-                    },
-                    {
-                        tokenId: "5",
-                        name: "Invoice #005",
-                        description: "Database Optimization",
-                        image: "https://picsum.photos/400/304",
-                        attributes: {
-                            invoiceAmount: 6000,
-                            creditRequested: 5000,
-                            dueBy: "2024-08-15",
-                            pdfFile: "https://example.com/invoice5.pdf"
-                        }
-                    },
-                    {
-                        tokenId: "6",
-                        name: "Invoice #006",
-                        description: "Security Audit",
-                        image: "https://picsum.photos/400/305",
-                        attributes: {
-                            invoiceAmount: 9500,
-                            creditRequested: 8000,
-                            dueBy: "2024-08-30",
-                            pdfFile: "https://example.com/invoice6.pdf"
-                        }
-                    }
-                ];
-
-                // Simulate loading delay
-                setTimeout(() => {
-                    setInvoices(mockInvoices);
-                    setLoading(false);
-                }, 1000);
+                setInvoices(listedNFTs);
+                setLoading(false);
 
             } catch (error) {
                 console.error('Error fetching listed NFTs:', error);
