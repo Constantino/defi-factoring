@@ -114,182 +114,168 @@ function Viewer() {
         <Box sx={{
             paddingTop: '80px',
             paddingX: 2,
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
-            backdropFilter: 'blur(10px)',
+            minHeight: '100vh'
         }}>
-            <Paper
-                elevation={0}
+            <Typography
+                variant="h4"
+                gutterBottom
                 sx={{
-                    p: 4,
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                    color: 'white',
+                    textAlign: 'center',
+                    mb: 4,
+                    fontWeight: 'bold',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
             >
+                Invoice NFTs
+            </Typography>
+
+            {loading ? (
                 <Typography
-                    variant="h4"
-                    gutterBottom
+                    variant="h6"
                     sx={{
                         color: 'white',
-                        textAlign: 'center',
-                        mb: 4,
-                        fontWeight: 'bold',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        textAlign: 'center'
                     }}
                 >
-                    Invoice NFTs
+                    Loading invoices...
                 </Typography>
-
-                {loading ? (
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            color: 'white',
-                            textAlign: 'center'
-                        }}
-                    >
-                        Loading invoices...
-                    </Typography>
-                ) : (
-                    <Grid
-                        container
-                        spacing={3}
-                        sx={{
-                            justifyContent: 'center',
-                            alignItems: 'stretch'
-                        }}
-                    >
-                        {invoices.map((invoice) => (
-                            <Grid item xs={12} sm={6} md={4} key={invoice.tokenId}>
-                                <Card
-                                    sx={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        backdropFilter: 'blur(10px)',
-                                        borderRadius: '16px',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        '&:hover': {
-                                            transform: 'translateY(-4px)',
-                                            transition: 'transform 0.2s ease-in-out',
-                                            boxShadow: '0 8px 40px rgba(0, 0, 0, 0.2)',
-                                        }
-                                    }}
-                                >
-                                    <Box sx={{
-                                        height: 200,
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        p: 2
-                                    }}>
-                                        <CardMedia
-                                            component="img"
-                                            image={invoice.image}
-                                            alt={invoice.name}
-                                            sx={{
-                                                height: '100%',
-                                                width: 'auto',
-                                                maxWidth: '100%',
-                                                objectFit: 'contain'
-                                            }}
-                                        />
-                                    </Box>
-                                    <CardContent sx={{ flexGrow: 1 }}>
-                                        <Typography
-                                            variant="h6"
-                                            gutterBottom
-                                            sx={{
-                                                color: 'white',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            {invoice.name}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                mb: 2
-                                            }}
-                                        >
-                                            {invoice.description}
-                                        </Typography>
-                                        <Stack spacing={1}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                                >
-                                                    Invoice Amount:
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'white', fontWeight: 'bold' }}
-                                                >
-                                                    {formatAmount(invoice.attributes.invoiceAmount)}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                                >
-                                                    Credit Requested:
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'white', fontWeight: 'bold' }}
-                                                >
-                                                    {formatAmount(invoice.attributes.creditRequested)}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                                >
-                                                    Due By:
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{ color: 'white', fontWeight: 'bold' }}
-                                                >
-                                                    {formatDate(invoice.attributes.dueBy)}
-                                                </Typography>
-                                            </Box>
-                                        </Stack>
-                                        {invoice.attributes.pdfFile && (
-                                            <Button
-                                                variant="outlined"
-                                                fullWidth
-                                                onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
-                                                sx={{
-                                                    mt: 2,
-                                                    color: 'white',
-                                                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                                                    '&:hover': {
-                                                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                    }
-                                                }}
+            ) : (
+                <Grid
+                    container
+                    spacing={3}
+                    sx={{
+                        justifyContent: 'center',
+                        alignItems: 'stretch'
+                    }}
+                >
+                    {invoices.map((invoice) => (
+                        <Grid item xs={12} sm={6} md={4} key={invoice.tokenId}>
+                            <Card
+                                sx={{
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    backdropFilter: 'blur(10px)',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        transition: 'transform 0.2s ease-in-out',
+                                        boxShadow: '0 8px 40px rgba(0, 0, 0, 0.2)',
+                                    }
+                                }}
+                            >
+                                <Box sx={{
+                                    height: 200,
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    p: 2
+                                }}>
+                                    <CardMedia
+                                        component="img"
+                                        image={invoice.image}
+                                        alt={invoice.name}
+                                        sx={{
+                                            height: '100%',
+                                            width: 'auto',
+                                            maxWidth: '100%',
+                                            objectFit: 'contain'
+                                        }}
+                                    />
+                                </Box>
+                                <CardContent sx={{ flexGrow: 1 }}>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        sx={{
+                                            color: 'white',
+                                            fontWeight: 'bold'
+                                        }}
+                                    >
+                                        {invoice.name}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            mb: 2
+                                        }}
+                                    >
+                                        {invoice.description}
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
                                             >
-                                                View PDF
-                                            </Button>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                )}
-            </Paper>
+                                                Invoice Amount:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.invoiceAmount)}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Credit Requested:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.creditRequested)}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Due By:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatDate(invoice.attributes.dueBy)}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                    {invoice.attributes.pdfFile && (
+                                        <Button
+                                            variant="outlined"
+                                            fullWidth
+                                            onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                            sx={{
+                                                mt: 2,
+                                                color: 'white',
+                                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                                '&:hover': {
+                                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                }
+                                            }}
+                                        >
+                                            View PDF
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            )}
         </Box>
     );
 }
