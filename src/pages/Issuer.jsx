@@ -10,6 +10,7 @@ import {
 import { PinataSDK } from "pinata";
 import { ethers } from 'ethers';
 import InvoiceNFTABI from '../contracts/artifacts/InvoiceNFT.abi.json';
+import MarketplaceABI from '../contracts/artifacts/Marketplace.abi.json';
 import logoImage from '../assets/defi-factoring-logo.png';
 import { useWallet } from '../context/WalletContext';
 
@@ -50,12 +51,60 @@ function Issuer() {
             console.log('Calling safeMint...');
             const tx = await contract.safeMint(addressAccount, uri);
             console.log('Waiting for transaction...');
-            await tx.wait();
-            console.log("Mint successful:", tx);
-            return tx;
+            const receipt = await tx.wait();
+            console.log("Mint successful:", receipt);
+
+            // Get the token ID from the Transfer event
+            const transferEvent = receipt.logs.find(
+                log => log.fragment && log.fragment.name === 'Transfer'
+            );
+            const tokenId = transferEvent ? transferEvent.args[2].toString() : null;
+            console.log('Minted token ID:', tokenId);
+
+            return { receipt, tokenId };
 
         } catch (error) {
             console.error("Mint failed:", error);
+            throw error;
+        }
+    };
+
+    const listInMarketplace = async (tokenId) => {
+        try {
+            console.log('Initializing marketplace contract...');
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const marketplaceContract = new ethers.Contract(
+                import.meta.env.VITE_MARKETPLACE_ADDRESS,
+                MarketplaceABI,
+                signer
+            );
+
+            // First approve the marketplace to transfer the NFT
+            console.log('Approving marketplace to transfer NFT...');
+            const nftContract = new ethers.Contract(
+                import.meta.env.VITE_INVOICE_NFT_ADDRESS,
+                InvoiceNFTABI,
+                signer
+            );
+            const approveTx = await nftContract.approve(
+                import.meta.env.VITE_MARKETPLACE_ADDRESS,
+                tokenId
+            );
+            await approveTx.wait();
+            console.log('Marketplace approved to transfer NFT');
+
+            // List the NFT in the marketplace
+            console.log('Listing NFT in marketplace...');
+            const listTx = await marketplaceContract.listNFT(
+                tokenId,
+                ethers.parseEther('0.0001') // Fixed price of 0.0001 ETH
+            );
+            await listTx.wait();
+            console.log('NFT listed successfully in marketplace');
+
+        } catch (error) {
+            console.error('Error listing NFT in marketplace:', error);
             throw error;
         }
     };
@@ -97,9 +146,7 @@ function Issuer() {
             console.log('Pinata initialized successfully');
 
             // Upload logo image
-
             const logoUrl = 'https://aqua-hard-reptile-893.mypinata.cloud/ipfs/bafybeiboyci4pn74ndnh5qapor6hczongyurmoiz6kcjypw3z5pkzazsby'
-
 
             // Upload PDF file if exists
             let pdfUrl = null;
@@ -139,8 +186,13 @@ function Issuer() {
             console.log('Starting NFT minting process...');
             console.log('Minting to address:', account);
             console.log('Using metadata URL:', metadataUrl);
-            await mint(account, metadataUrl);
-            console.log('NFT minted successfully');
+            const { tokenId } = await mint(account, metadataUrl);
+            console.log('NFT minted successfully with token ID:', tokenId);
+
+            // List NFT in marketplace
+            console.log('Listing NFT in marketplace...');
+            await listInMarketplace(tokenId);
+            console.log('NFT listed in marketplace successfully');
 
             // Reset form
             console.log('Resetting form...');
@@ -154,7 +206,7 @@ function Issuer() {
             });
             console.log('Form reset complete');
 
-            alert('Invoice NFT minted successfully!');
+            alert('Invoice NFT minted and listed successfully!');
 
         } catch (error) {
             console.error('Error in mint process:', error);
@@ -163,7 +215,7 @@ function Issuer() {
                 code: error.code,
                 stack: error.stack
             });
-            alert('Failed to mint invoice. Please try again.');
+            alert('Failed to mint or list invoice. Please try again.');
         } finally {
             setIsLoading(false);
             console.log('Mint process completed');
