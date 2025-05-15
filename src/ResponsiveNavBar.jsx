@@ -18,6 +18,7 @@ const pages = [
     { name: 'Issuer', path: '/issuer' },
     { name: 'Viewer', path: '/viewer' },
     { name: 'Marketplace', path: '/marketplace' },
+    { name: 'Factor', path: '/factor' },
     { name: 'Credits', path: '/credits' }
 ];
 

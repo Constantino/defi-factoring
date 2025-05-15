@@ -10,7 +10,7 @@ import {
     Stack,
 } from '@mui/material';
 
-function Credits() {
+function Factor() {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -126,7 +126,7 @@ function Credits() {
                     textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
             >
-                Credits
+                Factor
             </Typography>
 
             {loading ? (
@@ -279,4 +279,4 @@ function Credits() {
     );
 }
 
-export default Credits; 
+export default Factor;

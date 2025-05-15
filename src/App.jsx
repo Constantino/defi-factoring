@@ -1,9 +1,11 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ResponsiveAppBar from './ResponsiveNavBar';
 import Home from './pages/Home';
 import Issuer from './pages/Issuer';
 import Viewer from './pages/Viewer';
 import Marketplace from './pages/Marketplace';
+import Factor from './pages/Factor';
 import Credits from './pages/Credits';
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
         <Route path="/issuer" element={<Issuer />} />
         <Route path="/viewer" element={<Viewer />} />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/factor" element={<Factor />} />
         <Route path="/credits" element={<Credits />} />
       </Routes>
     </Router>
