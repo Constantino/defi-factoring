@@ -13,8 +13,9 @@ import Tooltip from '@mui/material/Tooltip';
 import { useWallet } from './context/WalletContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from './assets/defi-factoring-logo.png';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
-const pages = [
+const allPages = [
     { name: 'Issuer', path: '/issuer' },
     { name: 'Viewer', path: '/viewer' },
     { name: 'Marketplace', path: '/marketplace' },
@@ -24,6 +25,8 @@ const pages = [
 
 function ResponsiveAppBar() {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
+    const [anchorElUser, setAnchorElUser] = React.useState(null);
+    const [selectedRole, setSelectedRole] = React.useState('issuer');
     const { account, isConnecting, connectWallet, disconnectWallet } = useWallet();
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,14 +39,44 @@ function ResponsiveAppBar() {
         setAnchorElNav(null);
     };
 
+    const handleOpenUserMenu = (event) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
+    };
+
     const handleNavigation = (path) => {
         navigate(path);
         handleCloseNavMenu();
+        handleCloseUserMenu();
+    };
+
+    const handleRoleSelect = (role) => {
+        setSelectedRole(role);
+        handleCloseUserMenu();
+        if (role === 'issuer') {
+            navigate('/issuer');
+        } else if (role === 'factor') {
+            navigate('/factor');
+        }
     };
 
     const formatAddress = (address) => {
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
     };
+
+    // Filter pages based on selected role
+    const pages = allPages.filter(page => {
+        if (selectedRole === 'issuer') {
+            return !['factor', 'marketplace'].includes(page.name.toLowerCase());
+        }
+        if (selectedRole === 'factor') {
+            return !['issuer', 'viewer', 'credits'].includes(page.name.toLowerCase());
+        }
+        return true;
+    });
 
     return (
         <AppBar
@@ -140,7 +173,47 @@ function ResponsiveAppBar() {
                         ))}
                     </Box>
 
-                    <Box sx={{ flexGrow: 0 }}>
+                    <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box>
+                            <Button
+                                onClick={handleOpenUserMenu}
+                                endIcon={<ArrowDropDownIcon />}
+                                sx={{
+                                    color: 'white',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                                    }
+                                }}
+                            >
+                                {selectedRole ? selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1) : 'Role'}
+                            </Button>
+                            <Menu
+                                sx={{ mt: '45px' }}
+                                id="menu-appbar"
+                                anchorEl={anchorElUser}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(anchorElUser)}
+                                onClose={handleCloseUserMenu}
+                            >
+                                <MenuItem onClick={() => handleRoleSelect('factor')}>
+                                    <Typography textAlign="center">Factor</Typography>
+                                </MenuItem>
+                                <MenuItem onClick={() => handleRoleSelect('issuer')}>
+                                    <Typography textAlign="center">Issuer</Typography>
+                                </MenuItem>
+                            </Menu>
+                        </Box>
+
                         {account ? (
                             <Tooltip title="Click to disconnect" placement="bottom">
                                 <Button
