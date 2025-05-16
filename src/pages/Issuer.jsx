@@ -404,6 +404,61 @@ function Issuer() {
                         Maximum credit available: ${(parseFloat(formData.invoiceAmount) * 0.8).toFixed(2)} (80% of invoice amount)
                     </Typography>
                 )}
+                {formData.creditRequested && formData.dueBy && (
+                    <>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                display: 'block',
+                                textAlign: 'right',
+                                mb: 0.5
+                            }}
+                        >
+                            Annual Interest Rate: 10%
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                display: 'block',
+                                textAlign: 'right',
+                                mb: 0.5
+                            }}
+                        >
+                            Estimated Interest: ${(() => {
+                                const today = new Date();
+                                const dueDate = new Date(formData.dueBy);
+                                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                                const interestRate = 0.10; // 10% annual rate
+                                const dailyRate = interestRate / 365;
+                                const interestAmount = parseFloat(formData.creditRequested) * dailyRate * daysDiff;
+                                return interestAmount.toFixed(2);
+                            })()}
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                display: 'block',
+                                textAlign: 'right',
+                                mb: 1,
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Total Amount to Pay: ${(() => {
+                                const today = new Date();
+                                const dueDate = new Date(formData.dueBy);
+                                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                                const interestRate = 0.10;
+                                const dailyRate = interestRate / 365;
+                                const interestAmount = parseFloat(formData.creditRequested) * dailyRate * daysDiff;
+                                const totalAmount = parseFloat(formData.creditRequested) + interestAmount;
+                                return totalAmount.toFixed(2);
+                            })()}
+                        </Typography>
+                    </>
+                )}
                 <TextField
                     fullWidth
                     label="Due By"
