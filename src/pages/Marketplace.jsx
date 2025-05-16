@@ -26,84 +26,132 @@ function Marketplace() {
         return url;
     };
 
-    useEffect(() => {
-        const fetchListedNFTs = async () => {
-            try {
-                console.log('Initializing marketplace contract...');
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const marketplaceContract = new ethers.Contract(
-                    import.meta.env.VITE_MARKETPLACE_ADDRESS,
-                    MarketplaceABI,
-                    provider
-                );
+    const handleBuyNFT = async (tokenId, price) => {
+        try {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const marketplaceContract = new ethers.Contract(
+                import.meta.env.VITE_MARKETPLACE_ADDRESS,
+                MarketplaceABI,
+                signer
+            );
 
-                const nftContract = new ethers.Contract(
-                    import.meta.env.VITE_INVOICE_NFT_ADDRESS,
-                    InvoiceNFTABI,
-                    provider
-                );
+            // Convert price to wei
+            const priceInWei = price.toString();
+            console.log('Price in wei:', priceInWei.toString());
 
-                // Check first 100 token IDs for listings
-                const listedNFTs = [];
-                for (let i = 0; i < 100; i++) {
-                    try {
-                        // Get listing details
-                        const [seller, price, isActive] = await marketplaceContract.getListing(i);
-                        console.log(`Token ${i} listing:`, { seller, price: price.toString(), isActive });
+            console.log('Buying NFT...', {
+                tokenId,
+                price: priceInWei.toString(),
+                marketplaceAddress: import.meta.env.VITE_MARKETPLACE_ADDRESS
+            });
 
-                        if (isActive) {
-                            console.log(`Found active listing for token ${i}`);
+            // Call buyNFT function with explicit gas limit
+            const tx = await marketplaceContract.buyNFT(tokenId, {
+                value: priceInWei,
+                gasLimit: 500000 // Add explicit gas limit
+            });
 
-                            // Get token URI
-                            const tokenURI = await nftContract.tokenURI(i);
-                            console.log(`Token ${i} URI:`, tokenURI);
+            console.log('Transaction sent:', tx.hash);
+            await tx.wait();
+            console.log('Transaction confirmed');
 
-                            // Append Pinata gateway token to the URI
-                            const metadataURI = appendPinataToken(tokenURI);
-                            console.log(`Token ${i} metadata URI:`, metadataURI);
+            // Refresh the listings
+            fetchListedNFTs();
+        } catch (error) {
+            console.error('Error buying NFT:', error);
+            let errorMessage = 'Error buying NFT: ';
 
-                            // Fetch metadata
-                            const response = await fetch(metadataURI);
-                            const metadata = await response.json();
-                            console.log(`Token ${i} metadata:`, metadata);
-
-                            // Append Pinata token to image and PDF URLs
-                            const processedMetadata = {
-                                ...metadata,
-                                image: appendPinataToken(metadata.image),
-                                attributes: {
-                                    ...metadata.attributes,
-                                    pdfFile: appendPinataToken(metadata.attributes?.pdfFile)
-                                }
-                            };
-
-                            listedNFTs.push({
-                                tokenId: i.toString(),
-                                ...processedMetadata,
-                                listing: {
-                                    seller,
-                                    price: price.toString(),
-                                    isActive
-                                }
-                            });
-                        }
-                    } catch (error) {
-                        console.log(`Error checking token ${i}:`, error.message);
-                        // Skip tokens that don't exist or other errors
-                        continue;
-                    }
-                }
-
-                console.log('All listed NFTs:', listedNFTs);
-                setInvoices(listedNFTs);
-                setLoading(false);
-
-            } catch (error) {
-                console.error('Error fetching listed NFTs:', error);
-                setLoading(false);
+            if (error.message.includes('insufficient funds')) {
+                errorMessage += 'Insufficient funds to complete the transaction';
+            } else if (error.message.includes('user rejected')) {
+                errorMessage += 'Transaction was rejected';
+            } else {
+                errorMessage += error.message;
             }
-        };
 
+            alert(errorMessage);
+        }
+    };
+
+    const fetchListedNFTs = async () => {
+        try {
+            console.log('Initializing marketplace contract...');
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const marketplaceContract = new ethers.Contract(
+                import.meta.env.VITE_MARKETPLACE_ADDRESS,
+                MarketplaceABI,
+                provider
+            );
+
+            const nftContract = new ethers.Contract(
+                import.meta.env.VITE_INVOICE_NFT_ADDRESS,
+                InvoiceNFTABI,
+                provider
+            );
+
+            // Check first 100 token IDs for listings
+            const listedNFTs = [];
+            for (let i = 0; i < 100; i++) {
+                try {
+                    // Get listing details
+                    const [seller, price, isActive] = await marketplaceContract.getListing(i);
+                    console.log(`Token ${i} listing:`, { seller, price: price.toString(), isActive });
+
+                    if (isActive) {
+                        console.log(`Found active listing for token ${i}`);
+
+                        // Get token URI
+                        const tokenURI = await nftContract.tokenURI(i);
+                        console.log(`Token ${i} URI:`, tokenURI);
+
+                        // Append Pinata gateway token to the URI
+                        const metadataURI = appendPinataToken(tokenURI);
+                        console.log(`Token ${i} metadata URI:`, metadataURI);
+
+                        // Fetch metadata
+                        const response = await fetch(metadataURI);
+                        const metadata = await response.json();
+                        console.log(`Token ${i} metadata:`, metadata);
+
+                        // Append Pinata token to image and PDF URLs
+                        const processedMetadata = {
+                            ...metadata,
+                            image: appendPinataToken(metadata.image),
+                            attributes: {
+                                ...metadata.attributes,
+                                pdfFile: appendPinataToken(metadata.attributes?.pdfFile)
+                            }
+                        };
+
+                        listedNFTs.push({
+                            tokenId: i.toString(),
+                            ...processedMetadata,
+                            listing: {
+                                seller,
+                                price: price.toString(),
+                                isActive
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.log(`Error checking token ${i}:`, error.message);
+                    // Skip tokens that don't exist or other errors
+                    continue;
+                }
+            }
+
+            console.log('All listed NFTs:', listedNFTs);
+            setInvoices(listedNFTs);
+            setLoading(false);
+
+        } catch (error) {
+            console.error('Error fetching listed NFTs:', error);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchListedNFTs();
     }, [account]);
 
@@ -116,6 +164,10 @@ function Marketplace() {
             style: 'currency',
             currency: 'USD'
         }).format(amount);
+    };
+
+    const formatETH = (wei) => {
+        return ethers.formatEther(wei) + ' ETH';
     };
 
     return (
@@ -259,25 +311,53 @@ function Marketplace() {
                                                 {formatDate(invoice.attributes.dueBy)}
                                             </Typography>
                                         </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Price:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatETH(invoice.listing.price)}
+                                            </Typography>
+                                        </Box>
                                     </Stack>
-                                    {invoice.attributes.pdfFile && (
+                                    <Stack spacing={2} sx={{ mt: 2 }}>
+                                        {invoice.attributes.pdfFile && (
+                                            <Button
+                                                variant="outlined"
+                                                fullWidth
+                                                onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                                sx={{
+                                                    color: 'white',
+                                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                                    '&:hover': {
+                                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    }
+                                                }}
+                                            >
+                                                View PDF
+                                            </Button>
+                                        )}
                                         <Button
-                                            variant="outlined"
+                                            variant="contained"
                                             fullWidth
-                                            onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                            onClick={() => handleBuyNFT(invoice.tokenId, invoice.listing.price)}
                                             sx={{
-                                                mt: 2,
-                                                color: 'white',
-                                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                                backgroundColor: '#4CAF50',
                                                 '&:hover': {
-                                                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    backgroundColor: '#45a049',
                                                 }
                                             }}
                                         >
-                                            View PDF
+                                            Buy Credit
                                         </Button>
-                                    )}
+                                    </Stack>
                                 </CardContent>
                             </Card>
                         </Grid>
