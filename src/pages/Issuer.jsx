@@ -171,6 +171,14 @@ function Issuer() {
 
             // Create metadata
             console.log('Creating metadata...');
+            const today = new Date();
+            const dueDate = new Date(formData.dueBy);
+            const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+            const interestRate = 0.10;
+            const dailyRate = interestRate / 365;
+            const interestAmount = parseFloat(formData.creditRequested) * dailyRate * daysDiff;
+            const totalAmountToPay = parseFloat(formData.creditRequested) + interestAmount;
+
             const metadata = {
                 name: formData.name,
                 description: formData.description,
@@ -179,7 +187,10 @@ function Issuer() {
                     invoiceAmount: formData.invoiceAmount,
                     creditRequested: formData.creditRequested,
                     dueBy: formData.dueBy,
-                    pdfFile: pdfUrl
+                    pdfFile: pdfUrl,
+                    interestRate: "10%",
+                    interestAmount: interestAmount.toFixed(2),
+                    totalAmountToPay: totalAmountToPay.toFixed(2)
                 }
             };
             console.log('Metadata created:', metadata);
@@ -297,7 +308,7 @@ function Issuer() {
                     value={formData.description}
                     onChange={handleInputChange}
                     multiline
-                    rows={4}
+                    rows={1}
                     required
                     sx={{
                         '& .MuiOutlinedInput-root': {
@@ -392,13 +403,14 @@ function Issuer() {
                 />
                 {formData.invoiceAmount && (
                     <Typography
-                        variant="caption"
+                        variant="body2"
                         sx={{
-                            color: 'rgba(255, 255, 255, 0.6)',
+                            color: 'rgba(255, 255, 255, 0.7)',
                             display: 'block',
                             textAlign: 'right',
                             mt: -2,
-                            mb: 1
+                            mb: 1.5,
+                            fontSize: '0.95rem'
                         }}
                     >
                         Maximum credit available: ${(parseFloat(formData.invoiceAmount) * 0.8).toFixed(2)} (80% of invoice amount)
@@ -407,23 +419,25 @@ function Issuer() {
                 {formData.creditRequested && formData.dueBy && (
                     <>
                         <Typography
-                            variant="caption"
+                            variant="body2"
                             sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
+                                color: 'rgba(255, 255, 255, 0.7)',
                                 display: 'block',
                                 textAlign: 'right',
-                                mb: 0.5
+                                mb: 1,
+                                fontSize: '0.95rem'
                             }}
                         >
                             Annual Interest Rate: 10%
                         </Typography>
                         <Typography
-                            variant="caption"
+                            variant="body2"
                             sx={{
-                                color: 'rgba(255, 255, 255, 0.6)',
+                                color: 'rgba(255, 255, 255, 0.7)',
                                 display: 'block',
                                 textAlign: 'right',
-                                mb: 0.5
+                                mb: 1,
+                                fontSize: '0.95rem'
                             }}
                         >
                             Estimated Interest: ${(() => {
@@ -437,13 +451,14 @@ function Issuer() {
                             })()}
                         </Typography>
                         <Typography
-                            variant="caption"
+                            variant="body2"
                             sx={{
-                                color: 'rgba(255, 255, 255, 0.8)',
+                                color: 'rgba(255, 255, 255, 0.9)',
                                 display: 'block',
                                 textAlign: 'right',
-                                mb: 1,
-                                fontWeight: 'bold'
+                                mb: 1.5,
+                                fontWeight: 'bold',
+                                fontSize: '1rem'
                             }}
                         >
                             Total Amount to Pay: ${(() => {
@@ -546,7 +561,7 @@ function Issuer() {
                         }
                     }}
                 >
-                    {isLoading ? 'Minting...' : isConnected ? 'Mint Invoice' : 'Connect Wallet'}
+                    {isLoading ? 'Minting...' : 'Mint Invoice'}
                 </Button>
             </Stack>
         </Paper>
