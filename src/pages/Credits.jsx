@@ -9,94 +9,111 @@ import {
     Button,
     Stack,
 } from '@mui/material';
+import { ethers } from 'ethers';
+import CreditHandlerABI from '../contracts/artifacts/CreditHandler.abi.json';
+import InvoiceNFTABI from '../contracts/artifacts/InvoiceNFT.abi.json';
+import { useWallet } from '../context/WalletContext';
 
 function Credits() {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { account } = useWallet();
 
-    useEffect(() => {
-        // Mock data to simulate invoices
-        const mockInvoices = [
-            {
-                tokenId: "1",
-                name: "Invoice #001",
-                description: "Web Development Services",
-                image: "https://picsum.photos/400/300",
-                attributes: {
-                    invoiceAmount: 5000,
-                    creditRequested: 4000,
-                    dueBy: "2024-06-30",
-                    pdfFile: "https://example.com/invoice1.pdf"
-                }
-            },
-            {
-                tokenId: "2",
-                name: "Invoice #002",
-                description: "UI/UX Design Project",
-                image: "https://picsum.photos/400/301",
-                attributes: {
-                    invoiceAmount: 7500,
-                    creditRequested: 6000,
-                    dueBy: "2024-07-15",
-                    pdfFile: "https://example.com/invoice2.pdf"
-                }
-            },
-            {
-                tokenId: "3",
-                name: "Invoice #003",
-                description: "Mobile App Development",
-                image: "https://picsum.photos/400/302",
-                attributes: {
-                    invoiceAmount: 12000,
-                    creditRequested: 10000,
-                    dueBy: "2024-08-01",
-                    pdfFile: "https://example.com/invoice3.pdf"
-                }
-            },
-            {
-                tokenId: "4",
-                name: "Invoice #004",
-                description: "Cloud Infrastructure Setup",
-                image: "https://picsum.photos/400/303",
-                attributes: {
-                    invoiceAmount: 8500,
-                    creditRequested: 7000,
-                    dueBy: "2024-07-30",
-                    pdfFile: "https://example.com/invoice4.pdf"
-                }
-            },
-            {
-                tokenId: "5",
-                name: "Invoice #005",
-                description: "Database Optimization",
-                image: "https://picsum.photos/400/304",
-                attributes: {
-                    invoiceAmount: 6000,
-                    creditRequested: 5000,
-                    dueBy: "2024-08-15",
-                    pdfFile: "https://example.com/invoice5.pdf"
-                }
-            },
-            {
-                tokenId: "6",
-                name: "Invoice #006",
-                description: "Security Audit",
-                image: "https://picsum.photos/400/305",
-                attributes: {
-                    invoiceAmount: 9500,
-                    creditRequested: 8000,
-                    dueBy: "2024-08-30",
-                    pdfFile: "https://example.com/invoice6.pdf"
+    const appendPinataToken = (url) => {
+        if (url && url.includes('mypinata.cloud')) {
+            return `${url}?pinataGatewayToken=${import.meta.env.VITE_PINATA_GATEWAY_TOKEN}`;
+        }
+        return url;
+    };
+
+    const fetchCredits = async () => {
+        try {
+            if (!account) {
+                setLoading(false);
+                return;
+            }
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const creditHandlerContract = new ethers.Contract(
+                import.meta.env.VITE_CREDIT_HANDLER_ADDRESS,
+                CreditHandlerABI,
+                provider
+            );
+
+            const nftContract = new ethers.Contract(
+                import.meta.env.VITE_INVOICE_NFT_ADDRESS,
+                InvoiceNFTABI,
+                provider
+            );
+
+            const credits = [];
+
+            // Check first 100 credit IDs
+            for (let i = 0; i < 100; i++) {
+                try {
+                    // Get credit details
+                    const [lender, lendee, amount, dueBy, tokenId, isPaid] = await creditHandlerContract.getCredit(i);
+
+                    // Only process credits where the connected account is the lendee
+                    if (lendee.toLowerCase() === account.toLowerCase() && !isPaid) {
+                        console.log(`Found credit for token ${tokenId}:`, {
+                            lender,
+                            lendee,
+                            amount: amount.toString(),
+                            dueBy: dueBy.toString(),
+                            isPaid
+                        });
+
+                        // Get token URI
+                        const tokenURI = await nftContract.tokenURI(tokenId);
+                        const metadataURI = appendPinataToken(tokenURI);
+
+                        // Fetch metadata
+                        const response = await fetch(metadataURI);
+                        const metadata = await response.json();
+                        console.log(`Token ${tokenId} metadata:`, metadata);
+
+                        // Append Pinata token to image and PDF URLs
+                        const processedMetadata = {
+                            ...metadata,
+                            image: appendPinataToken(metadata.image),
+                            attributes: {
+                                ...metadata.attributes,
+                                pdfFile: appendPinataToken(metadata.attributes?.pdfFile)
+                            }
+                        };
+
+                        credits.push({
+                            creditId: i,
+                            tokenId: tokenId.toString(),
+                            ...processedMetadata,
+                            credit: {
+                                lender,
+                                amount: amount.toString(),
+                                dueBy: dueBy.toString(),
+                                isPaid
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.log(`Error checking credit ${i}:`, error.message);
+                    // Skip credits that don't exist or other errors
+                    continue;
                 }
             }
-        ];
 
-        // Simulate loading delay
-        setTimeout(() => {
-            setInvoices(mockInvoices);
+            console.log('All credits:', credits);
+            setInvoices(credits);
             setLoading(false);
-        }, 1000);
-    }, []);
+        } catch (error) {
+            console.error('Error fetching credits:', error);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCredits();
+    }, [account]);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString();
@@ -107,6 +124,10 @@ function Credits() {
             style: 'currency',
             currency: 'USD'
         }).format(amount);
+    };
+
+    const formatETH = (wei) => {
+        return ethers.formatEther(wei) + ' ETH';
     };
 
     return (
@@ -126,7 +147,7 @@ function Credits() {
                     textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
             >
-                Credits
+                Your Credits
             </Typography>
 
             {loading ? (
@@ -137,7 +158,17 @@ function Credits() {
                         textAlign: 'center'
                     }}
                 >
-                    Loading invoices...
+                    Loading credits...
+                </Typography>
+            ) : invoices.length === 0 ? (
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: 'white',
+                        textAlign: 'center'
+                    }}
+                >
+                    No credits found
                 </Typography>
             ) : (
                 <Grid
@@ -213,27 +244,13 @@ function Credits() {
                                                 variant="body2"
                                                 sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
                                             >
-                                                Invoice Amount:
+                                                Credit Amount:
                                             </Typography>
                                             <Typography
                                                 variant="body2"
                                                 sx={{ color: 'white', fontWeight: 'bold' }}
                                             >
-                                                {formatAmount(invoice.attributes.invoiceAmount)}
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                            >
-                                                Credit Requested:
-                                            </Typography>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ color: 'white', fontWeight: 'bold' }}
-                                            >
-                                                {formatAmount(invoice.attributes.creditRequested)}
+                                                {formatETH(invoice.credit.amount)}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -247,7 +264,21 @@ function Credits() {
                                                 variant="body2"
                                                 sx={{ color: 'white', fontWeight: 'bold' }}
                                             >
-                                                {formatDate(invoice.attributes.dueBy)}
+                                                {formatDate(new Date(Number(invoice.credit.dueBy) * 1000))}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Lender:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {invoice.credit.lender.slice(0, 6)}...{invoice.credit.lender.slice(-4)}
                                             </Typography>
                                         </Box>
                                     </Stack>
