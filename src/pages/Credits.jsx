@@ -297,6 +297,34 @@ function Credits() {
                                                 variant="body2"
                                                 sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
                                             >
+                                                Invoice Amount:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.invoiceAmount)}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Credit Requested:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.creditRequested)}
+                                            </Typography>
+                                        </Box>
+                                        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
                                                 Credit Amount:
                                             </Typography>
                                             <Typography
@@ -305,7 +333,7 @@ function Credits() {
                                             >
                                                 {formatETH(invoice.credit.amount)}
                                             </Typography>
-                                        </Box>
+                                        </Box> */}
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <Typography
                                                 variant="body2"

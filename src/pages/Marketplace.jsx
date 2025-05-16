@@ -430,7 +430,7 @@ function Marketplace() {
                                                 {formatDate(invoice.attributes.dueBy)}
                                             </Typography>
                                         </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <Typography
                                                 variant="body2"
                                                 sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
@@ -443,7 +443,7 @@ function Marketplace() {
                                             >
                                                 {formatETH(invoice.listing.price)}
                                             </Typography>
-                                        </Box>
+                                        </Box> */}
                                     </Stack>
                                     <Stack spacing={2} sx={{ mt: 2 }}>
                                         {invoice.attributes.pdfFile && (
