@@ -362,6 +362,54 @@ function Credits() {
                                                 {invoice.credit.lender.slice(0, 6)}...{invoice.credit.lender.slice(-4)}
                                             </Typography>
                                         </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Interest Rate:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {invoice.attributes.interestRate}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                                Interest Amount:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.interestAmount)}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            mt: 1,
+                                            pt: 1,
+                                            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+                                        }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 'bold' }}
+                                            >
+                                                Total Amount to Pay:
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ color: 'white', fontWeight: 'bold' }}
+                                            >
+                                                {formatAmount(invoice.attributes.totalAmountToPay)}
+                                            </Typography>
+                                        </Box>
                                     </Stack>
                                     <Stack spacing={2} sx={{ mt: 2 }}>
                                         {invoice.attributes.pdfFile && (
