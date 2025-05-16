@@ -12,6 +12,7 @@ import {
 import { ethers } from 'ethers';
 import MarketplaceABI from '../contracts/artifacts/Marketplace.abi.json';
 import InvoiceNFTABI from '../contracts/artifacts/InvoiceNFT.abi.json';
+import CreditHandlerABI from '../contracts/artifacts/CreditHandler.abi.json';
 import { useWallet } from '../context/WalletContext';
 
 function Marketplace() {
@@ -33,6 +34,18 @@ function Marketplace() {
             const marketplaceContract = new ethers.Contract(
                 import.meta.env.VITE_MARKETPLACE_ADDRESS,
                 MarketplaceABI,
+                signer
+            );
+
+            const nftContract = new ethers.Contract(
+                import.meta.env.VITE_INVOICE_NFT_ADDRESS,
+                InvoiceNFTABI,
+                signer
+            );
+
+            const creditHandlerContract = new ethers.Contract(
+                import.meta.env.VITE_CREDIT_HANDLER_ADDRESS,
+                CreditHandlerABI,
                 signer
             );
 
@@ -58,6 +71,17 @@ function Marketplace() {
                 throw new Error('The price has changed. Please refresh the page.');
             }
 
+            // Get NFT metadata to extract dueBy date
+            const tokenURI = await nftContract.tokenURI(tokenId);
+            const metadataURI = appendPinataToken(tokenURI);
+            const response = await fetch(metadataURI);
+            const metadata = await response.json();
+
+            // Convert dueBy date to Unix timestamp
+            const dueByDate = new Date(metadata.attributes.dueBy);
+            const dueByTimestamp = Math.floor(dueByDate.getTime() / 1000);
+            console.log('Due by timestamp:', dueByTimestamp);
+
             // Estimate gas first
             console.log('Estimating gas...');
             const gasEstimate = await marketplaceContract.buyNFT.estimateGas(tokenId, {
@@ -79,6 +103,70 @@ function Marketplace() {
             await tx.wait();
             console.log('Transaction confirmed');
 
+            // Get current owner of the NFT
+            const currentOwner = await nftContract.ownerOf(tokenId);
+            console.log('Current NFT owner:', currentOwner);
+            console.log('Signer address:', await signer.getAddress());
+
+            // Approve CreditHandler to transfer the NFT
+            console.log('Approving CreditHandler...');
+            const approveTx = await nftContract.approve(import.meta.env.VITE_CREDIT_HANDLER_ADDRESS, tokenId);
+            await approveTx.wait();
+            console.log('CreditHandler approved');
+
+            // Open credit in CreditHandler
+            console.log('Opening credit...');
+            const creditAmount = ethers.parseEther('0.001'); // 0.001 ETH
+
+            // Log all parameters for debugging
+            console.log('Credit parameters:', {
+                lendee: seller,
+                amount: creditAmount.toString(),
+                dueBy: dueByTimestamp,
+                tokenId: tokenId,
+                creditHandlerAddress: import.meta.env.VITE_CREDIT_HANDLER_ADDRESS,
+                currentOwner: currentOwner,
+                signerAddress: await signer.getAddress()
+            });
+
+            try {
+                // Check if the NFT is approved for the CreditHandler
+                const isApproved = await nftContract.getApproved(tokenId);
+                console.log('NFT approval status:', {
+                    approvedAddress: isApproved,
+                    creditHandlerAddress: import.meta.env.VITE_CREDIT_HANDLER_ADDRESS,
+                    isApproved: isApproved.toLowerCase() === import.meta.env.VITE_CREDIT_HANDLER_ADDRESS.toLowerCase()
+                });
+
+                // First try to estimate gas for openCredit
+                const openCreditGasEstimate = await creditHandlerContract.openCredit.estimateGas(
+                    seller,
+                    creditAmount,
+                    dueByTimestamp,
+                    tokenId
+                );
+                console.log('OpenCredit gas estimate:', openCreditGasEstimate.toString());
+
+                // Add 20% buffer to gas estimate
+                const openCreditGasLimit = openCreditGasEstimate * 120n / 100n;
+
+                const openCreditTx = await creditHandlerContract.openCredit(
+                    seller,
+                    creditAmount,
+                    dueByTimestamp,
+                    tokenId,
+                    {
+                        gasLimit: openCreditGasLimit
+                    }
+                );
+                console.log('OpenCredit transaction sent:', openCreditTx.hash);
+                await openCreditTx.wait();
+                console.log('Credit opened successfully');
+            } catch (openCreditError) {
+                console.error('Error in openCredit:', openCreditError);
+                throw new Error(`Failed to open credit: ${openCreditError.message}`);
+            }
+
             // Refresh the listings
             fetchListedNFTs();
         } catch (error) {
@@ -95,6 +183,8 @@ function Marketplace() {
                 errorMessage += 'The price has changed. Please refresh the page.';
             } else if (error.message.includes('Internal JSON-RPC error')) {
                 errorMessage += 'Transaction failed. Please check if you have enough ETH and try again.';
+            } else if (error.message.includes('Failed to open credit')) {
+                errorMessage += error.message;
             } else {
                 errorMessage += error.message;
             }

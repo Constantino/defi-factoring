@@ -44,14 +44,9 @@ contract CreditHandler is Ownable {
         uint256 _amountOfCredit,
         uint256 _dueBy,
         uint256 _tokenId
-    ) external onlyOwner returns (uint256) {
+    ) external returns (uint256) {
         require(_lendee != address(0), "Invalid lendee address");
         require(_amountOfCredit > 0, "Credit amount must be greater than 0");
-        require(_dueBy > block.timestamp, "Due date must be in the future");
-        require(
-            nftContract.ownerOf(_tokenId) == msg.sender,
-            "Not the NFT owner"
-        );
 
         uint256 creditId = creditCounter++;
         credits[creditId] = Credit({
