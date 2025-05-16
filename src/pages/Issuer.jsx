@@ -29,6 +29,15 @@ function Issuer() {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'creditRequested' && formData.invoiceAmount) {
+            const maxCredit = parseFloat(formData.invoiceAmount) * 0.8;
+            if (parseFloat(value) > maxCredit) {
+                alert(`Credit requested cannot exceed 80% of invoice amount ($${maxCredit.toFixed(2)})`);
+                return;
+            }
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -381,6 +390,20 @@ function Issuer() {
                         },
                     }}
                 />
+                {formData.invoiceAmount && (
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            display: 'block',
+                            textAlign: 'right',
+                            mt: -2,
+                            mb: 1
+                        }}
+                    >
+                        Maximum credit available: ${(parseFloat(formData.invoiceAmount) * 0.8).toFixed(2)} (80% of invoice amount)
+                    </Typography>
+                )}
                 <TextField
                     fullWidth
                     label="Due By"
