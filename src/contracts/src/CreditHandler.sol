@@ -47,6 +47,15 @@ contract CreditHandler is Ownable {
     ) external returns (uint256) {
         require(_lendee != address(0), "Invalid lendee address");
         require(_amountOfCredit > 0, "Credit amount must be greater than 0");
+        require(
+            nftContract.ownerOf(_tokenId) == _lendee,
+            "Lendee is not the owner of this NFT"
+        );
+        require(
+            nftContract.getApproved(_tokenId) == address(this) ||
+                nftContract.isApprovedForAll(_lendee, address(this)),
+            "CreditHandler not approved to transfer NFT"
+        );
 
         uint256 creditId = creditCounter++;
         credits[creditId] = Credit({
@@ -78,8 +87,8 @@ contract CreditHandler is Ownable {
 
         credit.isPaid = true;
 
-        // Transfer NFT to the payer (lendee)
-        nftContract.transferFrom(credit.lender, credit.lendee, credit.tokenId);
+        // Transfer NFT to the lender
+        nftContract.transferFrom(credit.lendee, credit.lender, credit.tokenId);
 
         // Transfer payment to the lender
         (bool success, ) = credit.lender.call{value: msg.value}("");

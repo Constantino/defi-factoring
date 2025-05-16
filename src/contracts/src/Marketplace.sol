@@ -17,8 +17,6 @@ interface IInvoiceNFT {
 contract Marketplace {
     IInvoiceNFT public nftContract;
     address public owner;
-    address constant NFT_CONTRACT_ADDRESS =
-        0x977a0b6e5c33d92Ba91D849D36fd541d9E5f7245;
 
     struct Listing {
         address seller;
@@ -42,8 +40,8 @@ contract Marketplace {
     );
     event NFTUnlisted(uint256 indexed tokenId, address indexed seller);
 
-    constructor() {
-        nftContract = IInvoiceNFT(NFT_CONTRACT_ADDRESS);
+    constructor(address _nftContract) {
+        nftContract = IInvoiceNFT(_nftContract);
         owner = msg.sender;
     }
 
