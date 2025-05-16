@@ -201,7 +201,7 @@ function Viewer() {
                                             fontWeight: 'bold'
                                         }}
                                     >
-                                        {invoice.name}
+                                        {invoice.name} - {invoice.tokenId}
                                     </Typography>
                                     <Typography
                                         variant="body2"
