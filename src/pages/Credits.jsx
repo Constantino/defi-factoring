@@ -111,6 +111,59 @@ function Credits() {
         }
     };
 
+    const handlePayCredit = async (creditId, amount) => {
+        try {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const creditHandlerContract = new ethers.Contract(
+                import.meta.env.VITE_CREDIT_HANDLER_ADDRESS,
+                CreditHandlerABI,
+                signer
+            );
+
+            console.log('Paying credit:', {
+                creditId,
+                amount: amount.toString()
+            });
+
+            // Estimate gas first
+            const gasEstimate = await creditHandlerContract.payCredit.estimateGas(creditId, {
+                value: amount
+            });
+            console.log('Estimated gas:', gasEstimate.toString());
+
+            // Add 20% buffer to gas estimate
+            const gasLimit = gasEstimate * 120n / 100n;
+
+            // Send transaction
+            const tx = await creditHandlerContract.payCredit(creditId, {
+                value: amount,
+                gasLimit: gasLimit
+            });
+            console.log('Transaction sent:', tx.hash);
+            await tx.wait();
+            console.log('Credit paid successfully');
+
+            // Refresh credits
+            fetchCredits();
+        } catch (error) {
+            console.error('Error paying credit:', error);
+            let errorMessage = 'Error paying credit: ';
+
+            if (error.message.includes('insufficient funds')) {
+                errorMessage += 'Insufficient funds to complete the transaction';
+            } else if (error.message.includes('user rejected')) {
+                errorMessage += 'Transaction was rejected';
+            } else if (error.message.includes('Internal JSON-RPC error')) {
+                errorMessage += 'Transaction failed. Please check if you have enough ETH and try again.';
+            } else {
+                errorMessage += error.message;
+            }
+
+            alert(errorMessage);
+        }
+    };
+
     useEffect(() => {
         fetchCredits();
     }, [account]);
@@ -282,24 +335,38 @@ function Credits() {
                                             </Typography>
                                         </Box>
                                     </Stack>
-                                    {invoice.attributes.pdfFile && (
+                                    <Stack spacing={2} sx={{ mt: 2 }}>
+                                        {invoice.attributes.pdfFile && (
+                                            <Button
+                                                variant="outlined"
+                                                fullWidth
+                                                onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                                sx={{
+                                                    color: 'white',
+                                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                                    '&:hover': {
+                                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    }
+                                                }}
+                                            >
+                                                View PDF
+                                            </Button>
+                                        )}
                                         <Button
-                                            variant="outlined"
+                                            variant="contained"
                                             fullWidth
-                                            onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                            onClick={() => handlePayCredit(invoice.creditId, invoice.credit.amount)}
                                             sx={{
-                                                mt: 2,
-                                                color: 'white',
-                                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                                backgroundColor: '#4CAF50',
                                                 '&:hover': {
-                                                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                    backgroundColor: '#45a049',
                                                 }
                                             }}
                                         >
-                                            View PDF
+                                            Pay Credit
                                         </Button>
-                                    )}
+                                    </Stack>
                                 </CardContent>
                             </Card>
                         </Grid>
