@@ -9,94 +9,89 @@ import {
     Button,
     Stack,
 } from '@mui/material';
+import { ethers } from 'ethers';
+import InvoiceNFTABI from '../contracts/artifacts/InvoiceNFT.abi.json';
+import { useWallet } from '../context/WalletContext';
 
 function Factor() {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { account } = useWallet();
+
+    const appendPinataToken = (url) => {
+        if (url && url.includes('mypinata.cloud')) {
+            return `${url}?pinataGatewayToken=${import.meta.env.VITE_PINATA_GATEWAY_TOKEN}`;
+        }
+        return url;
+    };
 
     useEffect(() => {
-        // Mock data to simulate invoices
-        const mockInvoices = [
-            {
-                tokenId: "1",
-                name: "Invoice #001",
-                description: "Web Development Services",
-                image: "https://picsum.photos/400/300",
-                attributes: {
-                    invoiceAmount: 5000,
-                    creditRequested: 4000,
-                    dueBy: "2024-06-30",
-                    pdfFile: "https://example.com/invoice1.pdf"
-                }
-            },
-            {
-                tokenId: "2",
-                name: "Invoice #002",
-                description: "UI/UX Design Project",
-                image: "https://picsum.photos/400/301",
-                attributes: {
-                    invoiceAmount: 7500,
-                    creditRequested: 6000,
-                    dueBy: "2024-07-15",
-                    pdfFile: "https://example.com/invoice2.pdf"
-                }
-            },
-            {
-                tokenId: "3",
-                name: "Invoice #003",
-                description: "Mobile App Development",
-                image: "https://picsum.photos/400/302",
-                attributes: {
-                    invoiceAmount: 12000,
-                    creditRequested: 10000,
-                    dueBy: "2024-08-01",
-                    pdfFile: "https://example.com/invoice3.pdf"
-                }
-            },
-            {
-                tokenId: "4",
-                name: "Invoice #004",
-                description: "Cloud Infrastructure Setup",
-                image: "https://picsum.photos/400/303",
-                attributes: {
-                    invoiceAmount: 8500,
-                    creditRequested: 7000,
-                    dueBy: "2024-07-30",
-                    pdfFile: "https://example.com/invoice4.pdf"
-                }
-            },
-            {
-                tokenId: "5",
-                name: "Invoice #005",
-                description: "Database Optimization",
-                image: "https://picsum.photos/400/304",
-                attributes: {
-                    invoiceAmount: 6000,
-                    creditRequested: 5000,
-                    dueBy: "2024-08-15",
-                    pdfFile: "https://example.com/invoice5.pdf"
-                }
-            },
-            {
-                tokenId: "6",
-                name: "Invoice #006",
-                description: "Security Audit",
-                image: "https://picsum.photos/400/305",
-                attributes: {
-                    invoiceAmount: 9500,
-                    creditRequested: 8000,
-                    dueBy: "2024-08-30",
-                    pdfFile: "https://example.com/invoice6.pdf"
-                }
+        const fetchNFTs = async () => {
+            if (!account) {
+                console.log('No account connected');
+                setLoading(false);
+                return;
             }
-        ];
 
-        // Simulate loading delay
-        setTimeout(() => {
-            setInvoices(mockInvoices);
-            setLoading(false);
-        }, 1000);
-    }, []);
+            try {
+                console.log('Fetching NFTs for account:', account);
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const contract = new ethers.Contract(
+                    import.meta.env.VITE_INVOICE_NFT_ADDRESS,
+                    InvoiceNFTABI,
+                    provider
+                );
+
+                const fetchedInvoices = [];
+
+                // Check first 100 token IDs for ownership
+                for (let i = 0; i < 100; i++) {
+                    try {
+                        // Get owner of token ID
+                        const owner = await contract.ownerOf(i);
+
+                        // If the current account owns this token
+                        if (owner.toLowerCase() === account.toLowerCase()) {
+                            console.log('Found owned token ID:', i);
+
+                            // Get token URI
+                            const tokenURI = await contract.tokenURI(i);
+                            console.log('Token URI:', tokenURI);
+
+                            // Append Pinata gateway token to the URI
+                            const metadataURI = appendPinataToken(tokenURI);
+                            console.log('Metadata URI with gateway token:', metadataURI);
+
+                            // Fetch metadata from IPFS
+                            const response = await fetch(metadataURI);
+                            const metadata = await response.json();
+                            console.log('Metadata for token', i, ':', metadata);
+
+                            // Add to fetched invoices using the metadata directly
+                            fetchedInvoices.push({
+                                tokenId: i.toString(),
+                                ...metadata,
+                                image: appendPinataToken(metadata.image),
+                                pdfUrl: appendPinataToken(metadata.pdfUrl)
+                            });
+                        }
+                    } catch (error) {
+                        // Skip tokens that don't exist or other errors
+                        continue;
+                    }
+                }
+
+                console.log('Fetched invoices:', fetchedInvoices);
+                setInvoices(fetchedInvoices);
+                setLoading(false);
+            } catch (error) {
+                console.error('Error fetching NFTs:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchNFTs();
+    }, [account]);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString();
@@ -126,7 +121,7 @@ function Factor() {
                     textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
             >
-                Factor
+                Your Invoice NFTs
             </Typography>
 
             {loading ? (
@@ -138,6 +133,16 @@ function Factor() {
                     }}
                 >
                     Loading invoices...
+                </Typography>
+            ) : invoices.length === 0 ? (
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: 'white',
+                        textAlign: 'center'
+                    }}
+                >
+                    No invoices found
                 </Typography>
             ) : (
                 <Grid
@@ -255,7 +260,7 @@ function Factor() {
                                         <Button
                                             variant="outlined"
                                             fullWidth
-                                            onClick={() => window.open(invoice.attributes.pdfFile, '_blank')}
+                                            onClick={() => window.open(`${invoice.attributes.pdfFile}?pinataGatewayToken=${import.meta.env.VITE_PINATA_GATEWAY_TOKEN}`, '_blank')}
                                             sx={{
                                                 mt: 2,
                                                 color: 'white',
@@ -279,4 +284,4 @@ function Factor() {
     );
 }
 
-export default Factor;
+export default Factor; 

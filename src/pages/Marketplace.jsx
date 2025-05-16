@@ -40,18 +40,41 @@ function Marketplace() {
             const priceInWei = price.toString();
             console.log('Price in wei:', priceInWei.toString());
 
-            console.log('Buying NFT...', {
-                tokenId,
-                price: priceInWei.toString(),
-                marketplaceAddress: import.meta.env.VITE_MARKETPLACE_ADDRESS
+            // First check if the NFT is still listed
+            const [seller, listingPrice, isActive] = await marketplaceContract.getListing(tokenId);
+            if (!isActive) {
+                throw new Error('This NFT is no longer listed for sale');
+            }
+
+            // Check if the price matches
+            const listingPriceInWei = listingPrice.toString();
+            const currentPriceInWei = priceInWei.toString();
+            console.log('Comparing prices:', {
+                listingPrice: listingPriceInWei,
+                currentPrice: currentPriceInWei
             });
 
-            // Call buyNFT function with explicit gas limit
+            if (listingPriceInWei !== currentPriceInWei) {
+                throw new Error('The price has changed. Please refresh the page.');
+            }
+
+            // Estimate gas first
+            console.log('Estimating gas...');
+            const gasEstimate = await marketplaceContract.buyNFT.estimateGas(tokenId, {
+                value: priceInWei
+            });
+            console.log('Estimated gas:', gasEstimate.toString());
+
+            // Add 20% buffer to gas estimate
+            const gasLimit = gasEstimate * 120n / 100n;
+            console.log('Gas limit with buffer:', gasLimit.toString());
+
+            // Call buyNFT function with the price in wei and gas limit
+            console.log('Sending transaction...');
             const tx = await marketplaceContract.buyNFT(tokenId, {
                 value: priceInWei,
-                gasLimit: 500000 // Add explicit gas limit
+                gasLimit: gasLimit
             });
-
             console.log('Transaction sent:', tx.hash);
             await tx.wait();
             console.log('Transaction confirmed');
@@ -66,6 +89,12 @@ function Marketplace() {
                 errorMessage += 'Insufficient funds to complete the transaction';
             } else if (error.message.includes('user rejected')) {
                 errorMessage += 'Transaction was rejected';
+            } else if (error.message.includes('no longer listed')) {
+                errorMessage += 'This NFT is no longer listed for sale';
+            } else if (error.message.includes('price has changed')) {
+                errorMessage += 'The price has changed. Please refresh the page.';
+            } else if (error.message.includes('Internal JSON-RPC error')) {
+                errorMessage += 'Transaction failed. Please check if you have enough ETH and try again.';
             } else {
                 errorMessage += error.message;
             }
