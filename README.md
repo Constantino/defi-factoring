@@ -4,7 +4,7 @@
 
 DeFi Factoring is a decentralized finance (DeFi) solution that revolutionizes traditional invoice factoring by leveraging blockchain technology and NFTs. This platform enables businesses to tokenize their accounts receivable into NFTs, providing immediate liquidity while maintaining transparency and security through smart contracts.
 
-[Live Demo](https://defi-factoring.netlify.app/){:target="_blank" rel="noopener noreferrer"} | [Video Demo](https://youtu.be/aY-QmpCkzwU){:target="_blank" rel="noopener noreferrer"}
+[Live Demo](https://defi-factoring.netlify.app/) | [Video Demo](https://youtu.be/aY-QmpCkzwU)
 
 ### What is DeFi Factoring?
 
@@ -23,9 +23,9 @@ The project consists of three main smart contracts and a React frontend:
 
 ### Deployed Contracts (Mantle Sepolia Testnet)
 
-- **InvoiceNFT**: [`0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5`](https://sepolia.mantlescan.xyz/address/0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5){:target="_blank" rel="noopener noreferrer"}
-- **Marketplace**: [`0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668`](https://sepolia.mantlescan.xyz/address/0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668){:target="_blank" rel="noopener noreferrer"}
-- **CreditHandler**: [`0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185`](https://sepolia.mantlescan.xyz/address/0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185){:target="_blank" rel="noopener noreferrer"}
+- **InvoiceNFT**: [`0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5`](https://sepolia.mantlescan.xyz/address/0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5)
+- **Marketplace**: [`0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668`](https://sepolia.mantlescan.xyz/address/0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668)
+- **CreditHandler**: [`0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185`](https://sepolia.mantlescan.xyz/address/0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185)
 
 
 1. **InvoiceNFT.sol**
