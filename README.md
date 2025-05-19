@@ -21,6 +21,13 @@ The project consists of three main smart contracts and a React frontend:
 
 ### Smart Contracts (`/contracts/src/`)
 
+### Deployed Contracts (Mantle Sepolia Testnet)
+
+- **InvoiceNFT**: [`0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5`](https://sepolia.mantlescan.xyz/address/0x7Dbb278E573A8f09eb97144E8a039737e87fBCD5)
+- **Marketplace**: [`0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668`](https://sepolia.mantlescan.xyz/address/0xF2f3e5924AdEbc8adACB19247fA963D9a5b0f668)
+- **CreditHandler**: [`0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185`](https://sepolia.mantlescan.xyz/address/0xE63c0EAd7EdF488ACc91b8455594B7C1016B0185)
+
+
 1. **InvoiceNFT.sol**
    - ERC721 token contract for invoice NFTs
    - Handles minting of new invoice NFTs
