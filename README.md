@@ -4,6 +4,8 @@
 
 DeFi Factoring is a decentralized finance (DeFi) solution that revolutionizes traditional invoice factoring by leveraging blockchain technology and NFTs. This platform enables businesses to tokenize their accounts receivable into NFTs, providing immediate liquidity while maintaining transparency and security through smart contracts.
 
+[Live Demo](https://defi-factoring.netlify.app/) | [Video Demo](https://youtu.be/aY-QmpCkzwU)
+
 ### What is DeFi Factoring?
 
 DeFi Factoring combines traditional invoice factoring with decentralized finance principles:
